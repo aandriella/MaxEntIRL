@@ -103,45 +103,24 @@ class CognitiveGame:
     Returns:
         The next state as implied by the given action and state.
     """
+
+    #get probability for a given state
+    prob_next_states = self.p_transition[s, :, a]
+
+
     s_point = self.state_index_to_point(s)
     s_next = 0
+    rand_prob = random.random()
 
     if s in self.final_states:
       return s
 
-    if s_point[1]>=4:
-      s_next = s_point[0]+1, 1
-    else:
-      if a == 0:
-        if random.random()<0.2:
-          s_next = s_point[0]+1, 1
-        else:
-          s_next = s_point[0], s_point[1]+1
-        pass
-      elif a == 1:
-        if random.random()<0.4:
-          s_next = s_point[0]+1, 1
-        else:
-          s_next = s_point[0], s_point[1]+1
-      elif a == 2:
-        if random.random()<0.6:
-          s_next = s_point[0]+1, 1
-        else:
-          s_next = s_point[0], s_point[1]+1
-      elif a == 3:
-        if random.random()<0.8:
-          s_next = s_point[0]+1, 1
-        else:
-          s_next = s_point[0], s_point[1]+1
-      elif a == 4:
-        if random.random()<1.0:
-          s_next = s_point[0]+1, 1
-        else:
-          s_next = s_point[0], s_point[1]+1
+    s_next = np.argmax(prob_next_states)
+
 
 
     #s = s[0] + self.actions[a][0], s[1] + self.actions[a][1]
-    return self.state_point_to_index(s_next)
+    return (s_next)
 
   def _transition_prob_table(self):
     """

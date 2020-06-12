@@ -17,7 +17,7 @@ class Trajectory:
             an entry should always be equal to `state_from` of the next
             entry.
     """
-    def __init__(self, transitions):
+    def __init__(self, transitions=[]):
         self._t = transitions
 
     def transitions(self):
@@ -126,6 +126,25 @@ def generate_trajectories(n, world, policy, start, final):
         return generate_trajectory(world, policy, s, final)
 
     return (_generate_one() for _ in range(n))
+
+
+def load_trajectories(file, episode, population):
+    """
+    read the trajecotires stored in a npy file
+
+    Args:
+        File: the npy file where the trajectories have been stored
+        episode: the number of episodes during the simulation
+        population: the number of pupulations during the simulation
+    :return: a Trajectory list of trajectories
+    """
+    print("Loading file...")
+    trajectories = list()
+    with open(file, "rb") as f:
+        for _ in range(episode * population):
+            trajectory = Trajectory(np.load(f, allow_pickle=True))
+            trajectories.append(trajectory)
+    return trajectories
 
 
 def policy_adapter(policy):
