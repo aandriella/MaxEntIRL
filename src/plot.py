@@ -203,7 +203,8 @@ def plot_trajectory(ax, world, trajectory, **kwargs):
 
     """
 
-    xy = [world.state_index_to_point(s) for s in trajectory.states()]
-    x, y = zip(*xy)
+    xyz = list(trajectory.states())
+    x, y, z = zip(*xyz)
+    ax.plot3D(x, y, z, 'gray')
 
     return ax.plot(x, y ,  **kwargs)
