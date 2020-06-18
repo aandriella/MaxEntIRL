@@ -8,6 +8,7 @@ by Ziebart (2010).
 
 import numpy as np
 from itertools import product
+import sys
 
 
 # -- common functions ----------------------------------------------------------
@@ -139,12 +140,15 @@ def local_action_probabilities(p_transition, terminal, reward):
     """
     n_states, _, n_actions = p_transition.shape
 
-    er = np.exp(reward)
+    #reduce the size of the reward to avoid overflow
+    er = np.exp(reward/100)
     p = [np.array(p_transition[:, :, a]) for a in range(n_actions)]
 
     # initialize at terminal states
     zs = np.zeros(n_states)
-    zs[terminal] = 1.0
+    for state in terminal:
+        zs[state] = 1
+
 
     # perform backward pass
     # This does not converge, instead we iterate a fixed number of steps. The
@@ -152,6 +156,7 @@ def local_action_probabilities(p_transition, terminal, reward):
     # guarantee propagation from any state to any other state and back in an
     # arbitrary MDP defined by p_transition.
     for _ in range(2 * n_states):
+        #er = [sys.float_info.max if rewd>=sys.float_info.max+1 else rewd for rewd in er ]
         za = np.array([er * p[a].dot(zs) for a in range(n_actions)]).T
         zs = 0.0001+za.sum(axis=1)
 
