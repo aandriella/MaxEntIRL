@@ -5,7 +5,6 @@ policy computations for GridWorld.
 
 import numpy as np
 
-
 def value_iteration(p, reward, discount, eps=1e-3):
     """
     Basic value-iteration algorithm to solve the given MDP.
