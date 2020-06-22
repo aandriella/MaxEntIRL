@@ -138,7 +138,7 @@ def main():
 
     initial_state = (1, 1, 0)
     final_states = [(n_solution, a, u)   for a in range(1, n_attempt+1) for u in range(-2, 2) ]
-    trajectories = T.load_trajectories(file="../trajectories/trajectories_generation0.npy", episode=50,population=100)
+    trajectories = T.load_trajectories(file="../trajectories/trajectories_generation0.npy", episode=5,population=10)
 
     # set-up mdp
     world, reward, terminals = setup_mdp(initial_state, final_states, n_solution,
@@ -170,16 +170,31 @@ def main():
     # # maximum casal entropy reinforcement learning (non-causal)
     maxcausal_R = maxent_causal(world, terminals, trajectories)
     #maxcausal_V = S.value_iteration(world.p_transition, maxcausal_R, discount=0.9, eps=1e-3)
-    maxcasual_V, maxcasual_P = vi.value_iteration(world.p_transition, maxent_R, gamma=0.9, error=1e-5,
+    maxcasual_V, maxcasual_P = vi.value_iteration(world.p_transition, maxent_R, gamma=0.9, error=1e-3,
                                                             deterministic=True)
     # PLOTS MAXENT_CAUSAL IRL
-    plt.figure(figsize=(20, 11), num="maxcausal_R")
-    sns.heatmap(np.reshape(maxent_R, (11, 20)), cmap="Spectral", annot=True, cbar=False)
-    plt.figure(figsize=(20, 11), num="maxcausal_V")
-    sns.heatmap(np.reshape(maxcasual_V, (11, 20)), cmap="Spectral", annot=True, cbar=False)
-    plt.figure(figsize=(20, 11), num="maxcausal_P")
-    sns.heatmap(np.reshape(maxcasual_P, (11, 20)), cmap="Spectral", annot=True, cbar=False)
+    # plt.figure(figsize=(20, 11), num="maxcausal_R")
+    # sns.heatmap(np.reshape(maxent_R, (11, 20)), cmap="Spectral", annot=True, cbar=False)
+    # plt.figure(figsize=(20, 11), num="maxcausal_V")
+    # sns.heatmap(np.reshape(maxcasual_V, (11, 20)), cmap="Spectral", annot=True, cbar=False)
+    # plt.figure(figsize=(20, 11), num="maxcausal_P")
+    # sns.heatmap(np.reshape(maxcasual_P, (11, 20)), cmap="Spectral", annot=True, cbar=False)
 
+
+
+    #we interact with the user which provided those others trajectories
+    new_trajectories = T.load_trajectories(file="../trajectories/Evaluation/trajectories_generation0.npy", episode=1,population=10)
+    evauation_trajectories = trajectories+new_trajectories
+    maxent_R_eval = maxent(world, terminals, evauation_trajectories)
+    #maxent_V = S.value_iteration(world.p_transition, maxent_R, discount=0.9, eps=1e-3)
+    maxent_V_eval, maxent_P_eval = vi.value_iteration(world.p_transition, maxent_R_eval, gamma=0.9, error=1e-5, deterministic=True)
+
+    plt.figure(figsize=(20, 11), num="maxent_R_eval")
+    sns.heatmap(np.reshape(maxent_R_eval, (11, 20)), cmap="Spectral", annot=True, cbar=False)
+    plt.figure(figsize=(20, 11), num="maxent_V_eval")
+    sns.heatmap(np.reshape(maxent_V_eval, (11, 20)), cmap="Spectral", annot=True, cbar=False)
+    plt.figure(figsize=(20, 11), num="maxent_P_eval")
+    sns.heatmap(np.reshape(maxent_P_eval, (11, 20)), cmap="Spectral", annot=True, cbar=False)
     plt.show()
 
 
