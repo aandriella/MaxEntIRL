@@ -13,6 +13,7 @@ Some general remarks:
 import numpy as np
 import itertools
 import random
+import Episode as Episode
 
 
 class CognitiveGame:
@@ -37,7 +38,7 @@ class CognitiveGame:
           transitioning from state `from` to state `to` via action `a`.
   """
 
-  def __init__(self, initial_state, final_states, n_solution, n_token, n_attempt, n_user_action, timeout, trans_filename):
+  def __init__(self, initial_state, final_states, n_solution, n_token, n_attempt, n_user_action, timeout, episodes):
     self.n_solution = n_solution
     self.n_token = n_token
     self.n_attempt = n_attempt
@@ -47,9 +48,15 @@ class CognitiveGame:
     self.n_actions = len(self.actions)
     self.timeout = timeout
     self.states_tuple = self.generate_states(user_progress=range(1, self.n_solution+1), user_attempt=range(1, n_attempt+1), user_action=range(-2, 2) )
+    self.states_index_tuple = self.get_states_index(self.states_tuple)
     self.initial_state = self.state_point_to_index(initial_state)
-    self.final_states = [self.state_point_to_index(state=final_state) for final_state in (final_states)]
-    self.p_transition = self.load_transition_prob(trans_filename, final_states)
+    self.terminal_states = [self.state_point_to_index(state=final_state) for final_state in (final_states)]
+    self.p_transition = self.gen_transition_matrix(episodes, self.states_index_tuple, self.actions, self.terminal_states)
+    #self.p_transition = self.load_transition_prob(trans_filename, final_states)
+
+  def get_states_index(self, states_space):
+    states_index_list = [self.state_point_to_index(s) for s in (states_space)]
+    return states_index_list
 
 
   def state_index_to_point(self, index):
@@ -123,6 +130,32 @@ class CognitiveGame:
     #s = s[0] + self.actions[a][0], s[1] + self.actions[a][1]
     return (s_next)
 
+  def gen_transition_matrix(self, episodes, state_list, action_space, terminal_states):
+    '''
+    This function generate the transition matrix function
+    Args:
+        :episodes_path:
+        :n_episode:
+        :n_sol_per_pos:
+        :environment:
+        :path_trans_matrix_occ:
+        :param path_trans_matrix_prob:
+    Return:
+    '''
+    trans_matrix_occ = Episode.generate_statistics(state_list, action_space, episodes)
+    # save the episode on a file
+    # with open(path_trans_matrix_occ, "ab") as f:
+    #   np.save(f, trans_matrix)
+    #   f.close()
+    #trans_matrix_occ = Episode.read_trans_matrix(path_trans_matrix_occ)
+    trans_matrix_prob = Episode.compute_probabilities(trans_matrix_occ, terminal_states)
+    # save the episode on a file
+    # with open(path_trans_matrix_prob, "ab") as f:
+    #   np.save(f, trans_matrix_prob)
+    #   f.close()
+    return trans_matrix_prob
+
+
   def _transition_prob_table(self):
     """
     Builds the internal probability transition table.
@@ -142,6 +175,10 @@ class CognitiveGame:
       for act in a:
         for s_to in s2:
           table[s_from, s_to, act] = self._transition_prob(s_from, s_to, act, 0)
+
+    for state in terminal_states:
+      point_to_index = self.state_point_to_index(state)
+      table[point_to_index][point_to_index][0] = 1
     #for s_from, s_to, a in itertools.product(s1, s2, a):
     #  table[s_from, s_to, a] = self._transition_prob(s_from, s_to, a, 0)
 
@@ -216,12 +253,6 @@ class CognitiveGame:
     elif (fx, fy) in max_attempt_states and (tx==fx+1 and ty == fy):
       return 1.0
 
-
-
-
-
-
-
     print("prev_state:", tx,ty)
 
     sum = 0
@@ -260,7 +291,7 @@ class CognitiveGame:
 
 
 
-  def state_features(world):
+  def state_features(self):
     """
     Return the feature matrix assigning each state with an individual
     feature (i.e. an identity matrix of size n_states * n_states).
@@ -274,7 +305,7 @@ class CognitiveGame:
     Returns:
         The coordinate-feature-matrix for the specified world.
     """
-    return np.identity(world.n_states)
+    return np.identity(self.n_states)
 
   def assistive_feature(self, trajs):
     """
@@ -292,10 +323,10 @@ class CognitiveGame:
     feat_trajs = np.zeros([N, 4])
     t = 0
     for traj in trajs:
-      for s1, a, s2 in (traj._t):
+      for s1, a, s2 in traj._t:
         ix, iy, iz = self.state_index_to_point(s1)
         feat[s1, 0] = 0
-        feat[s1, 1] = max_attempt*ix
+        feat[s1, 1] = 0#max_attempt*ix
         feat[s1, 2] = ix
         feat[s1, 3] = iy
 
@@ -307,7 +338,7 @@ class CognitiveGame:
       t += 1
     return feat_trajs / len(trajs)
 
-  def coordinate_features(world):
+  def coordinate_features(self, world):
     """
     Symmetric features assigning each state a vector where the respective
     coordinate indices are nonzero (i.e. a matrix of size n_states *

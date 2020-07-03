@@ -13,7 +13,7 @@ import sys
 
 # -- common functions ----------------------------------------------------------
 
-def feature_expectation_from_trajectories(features, trajectories):
+def feature_expectation_from_trajectories(features, episodes):
     """
     Compute the feature expectation of the given trajectories.
 
@@ -33,14 +33,14 @@ def feature_expectation_from_trajectories(features, trajectories):
 
     fe = np.zeros(n_features)
 
-    for t in trajectories:
-        for s in t.states():
-            fe += features[s, :]
+    for episode in episodes:
+        for state in episode._t:
+            fe += features[state[0], :]
 
-    return fe / len(trajectories)
+    return fe / len(episodes)
 
 
-def initial_probabilities_from_trajectories(n_states, trajectories):
+def initial_probabilities_from_trajectories(n_states, episodes):
     """
     Compute the probability of a state being a starting state using the
     given trajectories.
@@ -55,10 +55,10 @@ def initial_probabilities_from_trajectories(n_states, trajectories):
     """
     p = np.zeros(n_states)
 
-    for t in trajectories:
-        p[t.transitions()[0][0]] += 1.0
+    for episode in episodes:
+        p[episode._t[0][0]] += 1.0
 
-    return p / len(trajectories)
+    return p / len(episodes)
 
 
 def expected_svf_from_policy(p_transition, p_initial, terminal, p_action, eps=1e-5):
