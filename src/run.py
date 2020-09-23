@@ -1,9 +1,8 @@
 #!/usr/bin/env python
 
 from cognitivegame import CognitiveGame
-from trajectory import Trajectory
+from episode import Episode
 import maxent as M
-import maxent_ as ME
 import plot as P
 import trajectory  as T
 import solver as S
@@ -138,11 +137,13 @@ def main():
 
     initial_state = (1, 1, 0)
     final_states = [(n_solution, a, u)   for a in range(1, n_attempt+1) for u in range(-2, 2) ]
-    trajectories = T.load_trajectories(file="../trajectories/trajectories_generation0.npy", episode=5,population=10)
+
+    episode_obj = Episode()
+    episodes = episode_obj.load_episodes(file="../trajectories/trajectories_generation0.npy", episode=5, population=10)
 
     # set-up mdp
     world, reward, terminals = setup_mdp(initial_state, final_states, n_solution,
-                                         n_token, n_attempt, n_user_action, timeout=15, trans_filename="../trajectories/trans_matrix_prob.npy")
+                                         n_token, n_attempt, n_user_action, 15, episodes)
 
     exp_V, exp_P = vi.value_iteration(world.p_transition, reward, gamma=0.9, error=1e-3, deterministic=True)
 
@@ -155,7 +156,7 @@ def main():
     sns.heatmap(np.reshape(exp_P, (11, 20)), cmap="Spectral", annot=True, cbar=False)
 
     # # maximum entropy reinforcement learning (non-causal)
-    maxent_R = maxent(world, terminals, trajectories)
+    maxent_R = maxent(world, terminals, episodes)
     #maxent_V = S.value_iteration(world.p_transition, maxent_R, discount=0.9, eps=1e-3)
     maxent_V, maxent_P = vi.value_iteration(world.p_transition, maxent_R, gamma=0.9, error=1e-5, deterministic=True)
 
@@ -168,7 +169,7 @@ def main():
     sns.heatmap(np.reshape(maxent_P, (11, 20)), cmap="Spectral", annot=True, cbar=False)
 
     # # maximum casal entropy reinforcement learning (non-causal)
-    maxcausal_R = maxent_causal(world, terminals, trajectories)
+    maxcausal_R = maxent_causal(world, terminals, episodes)
     #maxcausal_V = S.value_iteration(world.p_transition, maxcausal_R, discount=0.9, eps=1e-3)
     maxcasual_V, maxcasual_P = vi.value_iteration(world.p_transition, maxent_R, gamma=0.9, error=1e-3,
                                                             deterministic=True)
@@ -183,9 +184,9 @@ def main():
 
 
     #we interact with the user which provided those others trajectories
-    new_trajectories = T.load_trajectories(file="../trajectories/Evaluation/trajectories_generation0.npy", episode=1,population=10)
-    evauation_trajectories = trajectories+new_trajectories
-    maxent_R_eval = maxent(world, terminals, evauation_trajectories)
+    new_episodes = episode_obj.load_episodes(file="../trajectories/trajectories_generation0.npy", episode=1,population=10)
+    evauation_episodes = episodes+new_episodes
+    maxent_R_eval = maxent(world, terminals, evauation_episodes)
     #maxent_V = S.value_iteration(world.p_transition, maxent_R, discount=0.9, eps=1e-3)
     maxent_V_eval, maxent_P_eval = vi.value_iteration(world.p_transition, maxent_R_eval, gamma=0.9, error=1e-5, deterministic=True)
 
