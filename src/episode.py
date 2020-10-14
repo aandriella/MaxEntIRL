@@ -160,8 +160,8 @@
 #         '''
 #         It returns the episodes related to the saved file
 #         :param file:
-#         :param episode: look at main.py
-#         :param sol_per_pop: look at main.py
+#         :param episode: look at simulation.py
+#         :param sol_per_pop: look at simulation.py
 #         :return: a list of episodes
 #         '''
 #         print("LOADING...")
