@@ -144,6 +144,7 @@ def local_action_probabilities(p_transition, terminal, reward):
     er = np.exp(reward/100)
     p = [np.array(p_transition[:, :, a]) for a in range(n_actions)]
 
+
     # initialize at terminal states
     zs = np.zeros(n_states)
     for state in terminal:
@@ -157,8 +158,11 @@ def local_action_probabilities(p_transition, terminal, reward):
     # arbitrary MDP defined by p_transition.
     for _ in range(2 * n_states):
         #er = [sys.float_info.max if rewd>=sys.float_info.max+1 else rewd for rewd in er ]
+
         za = np.array([er * p[a].dot(zs) for a in range(n_actions)]).T
+        za[za == np.inf] = np.min(za)
         zs = 0.0001+za.sum(axis=1)
+        #print("zs", zs)
 
     # compute local action probabilities
     return za / zs[:, None]
